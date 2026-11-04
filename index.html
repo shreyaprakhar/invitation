@@ -291,7 +291,7 @@ footer h2{color:#f0d59c}
   </div>
 </section>
 
-<!-- Give Your Blessing Section (Real-time Wall) -->
+<!-- Give Your Blessing Section -->
 <section data-aos="fade-up">
   <div class="ornament">♥</div>
   <h2>Give Your Blessing</h2>
@@ -384,13 +384,10 @@ function countdown(){
 countdown();
 setInterval(countdown,1000);
 
-// Sliding Puzzle Logic
-import pic1 from './assets/pic1.jpg'; // Apne folder ke hisaab se path dein
-import pic2 from './assets/pic2.jpg';
-
+// Sliding Puzzle Logic (Using your pic1.jpeg and pic2.jpeg extensions correctly)
 const images = [
-  pic1,
-  pic2
+  "pic1.jpeg",
+  "pic2.jpeg"
 ];
 let currentImgIdx = 0;
 let boardState = [0,1,2,3,4,5,6,7,8];
@@ -409,7 +406,6 @@ function switchPuzzle(idx) {
 }
 
 function shufflePuzzle() {
-  // Simple random shuffle ensuring solvability or just randomize valid moves
   for (let i = boardState.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [boardState[i], boardState[j]] = [boardState[j], boardState[i]];
@@ -442,7 +438,6 @@ function moveTile(idx) {
   const validMoves = [
     emptyIdx - 1, emptyIdx + 1, emptyIdx - 3, emptyIdx + 3
   ];
-  // check edge bounds
   if(emptyIdx % 3 === 0 && idx === emptyIdx - 1) return;
   if(emptyIdx % 3 === 2 && idx === emptyIdx + 1) return;
 
@@ -472,36 +467,8 @@ function updateCount() {
   }
 }
 
-// ==========================================
-// FIREBASE INTEGRATION SETUP
-// ==========================================
-// 1. Firebase Scripts include in head or here:
-// Add these script tags in your HTML <head> when connecting real DB:
-/*
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
-*/
-
-// 2. Initialize Firebase (Replace with your Firebase Console Config):
-/*
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "firebase/firestore";
-const firebaseConfig = {
-  apiKey: "AIzaSyBxvsT7A8UhztQ9yCT4g-QAsMh6dSy-Jz0",
-  authDomain: "shreya-prakhar-wedding.firebaseapp.com",
-  projectId: "shreya-prakhar-wedding",
-  storageBucket: "shreya-prakhar-wedding.firebasestorage.app",
-  messagingSenderId: "852876201723",
-  appId: "1:852876201723:web:012aa3f3280ac1fff4aa5e",
-  measurementId: "G-78MQRJ1ZNS"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-*/
-
-// Simulated Real-time Post function (Replace with Firebase `addDoc` once connected)
-function postBlessing(e) {
+// Post Blessing Function (Local Wall + Firebase Ready)
+async function postBlessing(e) {
   e.preventDefault();
   const name = document.getElementById('guestName').value;
   const message = document.getElementById('guestMessage').value;
@@ -528,17 +495,21 @@ function postBlessing(e) {
   document.getElementById('charCount').textContent = "0/50 words";
   alert("Thank you for your lovely blessing! ❤️");
 
-  try {
-    await addDoc(collection(db, "blessings"), {
-      name: name,
-      message: message,
-      timestamp: new Date()
-    });
-    document.getElementById('blessingForm').reset();
-  } catch (error) {
-    console.error("Error adding blessing: ", error);
-  }
-
+  /* 
+    --- FIREBASE FIRESTORE INTEGRATION (Optional) ---
+    Jab aap Firebase Firestore database connect kar lein, toh 
+    upar head mein SDK include karke niche wale code ko uncomment kar dena:
+    
+    try {
+      await addDoc(collection(db, "blessings"), {
+        name: name,
+        message: message,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error("Error adding blessing: ", error);
+    }
+  */
 }
 
 function escapeHtml(text) {
