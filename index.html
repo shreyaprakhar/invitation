@@ -9,7 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- AOS Animation Library -->
@@ -643,55 +645,87 @@ const initialBlessings = [
   }
 ];
 
-function loadBlessings() {
-  const stored = localStorage.getItem('wedding_blessings');
-  const blessings = stored ? JSON.parse(stored) : initialBlessings;
-  const grid = document.getElementById('blessingsGrid');
-  grid.innerHTML = "";
+// 1. Aapka Firebase Config (Console se mila hua yahan paste karein)
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBxvsT7A8UhztQ9yCT4g-QAsMh6dSy-Jz0",
+  authDomain: "shreya-prakhar-wedding.firebaseapp.com",
+  projectId: "shreya-prakhar-wedding",
+  storageBucket: "shreya-prakhar-wedding.firebasestorage.app",
+  messagingSenderId: "852876201723",
+  appId: "1:852876201723:web:012aa3f3280ac1fff4aa5e",
+  measurementId: "G-78MQRJ1ZNS"
+};
 
-  blessings.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'glass-card-light p-5 rounded-xl border-l-4 border-gold text-left shadow-sm transition hover:shadow-md';
-    card.innerHTML = `
-      <h4 class="font-serif text-lg font-bold text-burgundy-700">${escapeHtml(b.name)}</h4>
-      <p class="text-xs text-gray-700 mt-1 leading-relaxed">${escapeHtml(b.message)}</p>
-      <span class="text-[10px] text-gold-dark font-medium block mt-2">${escapeHtml(b.date)}</span>
-    `;
-    grid.appendChild(card);
-  });
+// 2. Firebase Initialize karein
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 3. Real-time Firebase Listener
+function listenToBlessings() {
+  db.collection("blessings")
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snapshot) => {
+      const grid = document.getElementById('blessingsGrid');
+      grid.innerHTML = "";
+
+      if (snapshot.empty) {
+        grid.innerHTML = `<p class="text-xs text-gray-500 italic">Be the First One to Wish!</p>`;
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const b = doc.data();
+        const dateStr = b.createdAt ? new Date(b.createdAt.toDate()).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        }) : 'Recently';
+
+        const card = document.createElement('div');
+        card.className = 'glass-card-light p-5 rounded-xl border-l-4 border-gold text-left shadow-sm transition hover:shadow-md';
+        card.innerHTML = `
+          <h4 class="font-serif text-lg font-bold text-burgundy-700">${escapeHtml(b.name)}</h4>
+          <p class="text-xs text-gray-700 mt-1 leading-relaxed">${escapeHtml(b.message)}</p>
+          <span class="text-[10px] text-gold-dark font-medium block mt-2">${dateStr}</span>
+        `;
+        grid.appendChild(card);
+      });
+    });
 }
 
-function postBlessing(e) {
+// 4. Comment/Blessing Firebase me save karne ka function
+async function postBlessing(e) {
   e.preventDefault();
   const name = document.getElementById('guestName').value.trim();
   const message = document.getElementById('guestMessage').value.trim();
   const words = message ? message.split(/\s+/).length : 0;
 
   if (words > 50) {
-    showToast("Please shorten your message to under 50 words.");
+    showToast("Please message ko 50 words se chhota karein.");
     return;
   }
 
-  const stored = localStorage.getItem('wedding_blessings');
-  const blessings = stored ? JSON.parse(stored) : [...initialBlessings];
+  try {
+    await db.collection("blessings").add({
+      name: name,
+      message: message,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-  const newBlessing = {
-    name: name,
-    message: message,
-    date: "Just now"
-  };
-
-  blessings.unshift(newBlessing);
-  localStorage.setItem('wedding_blessings', JSON.stringify(blessings));
-
-  loadBlessings();
-
-  document.getElementById('blessingForm').reset();
-  document.getElementById('charCount').textContent = "0/50 words";
-  showToast("Thank you for your lovely blessing! ❤️");
+    document.getElementById('blessingForm').reset();
+    document.getElementById('charCount').textContent = "0/50 words";
+    showToast("Thanks for your lovely blessing! ❤️");
+  } catch (error) {
+    console.error("Error: ", error);
+    showToast("Blessing save nahi ho payi.");
+  }
 }
 
-function escapeHtml(text) {
+// Window load hone par execute karein
+window.onload = function() {
+  shufflePuzzle();
+  listenToBlessings();
+};
+  function escapeHtml(text) {
   const div = document.createElement('div');
   div.innerText = text;
   return div.innerHTML;
@@ -707,11 +741,7 @@ function showToast(msg) {
   }, 3500);
 }
 
-// Initial setup on load
-window.onload = function() {
-  shufflePuzzle();
-  loadBlessings();
-};
+
 </script>
 
 </body>
