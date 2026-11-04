@@ -408,7 +408,7 @@ footer h2 { color: var(--gold-light); }
 <section class="dark-section" data-aos="fade-up">
   <div class="ornament">✨</div>
   <h2>Our Moments (Jumble Puzzle)</h2>
-  <p class="subtitle">Solve the puzzle to reveal our special memories!</p>
+  <p class="subtitle">Solve the puzzle to reveal our special memories using pic1.jpeg & pic2.jpeg!</p>
   
   <div class="puzzle-section">
     <div class="puzzle-tabs">
@@ -468,6 +468,88 @@ footer h2 { color: var(--gold-light); }
 
 <!-- AOS Animation JS -->
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<!-- Firebase SDKs (CDN) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // ==========================================
+  // APNA FIREBASE CONFIG YAHAN DALO MALIK 👇
+  // ==========================================
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBxvsT7A8UhztQ9yCT4g-QAsMh6dSy-Jz0",
+  authDomain: "shreya-prakhar-wedding.firebaseapp.com",
+  projectId: "shreya-prakhar-wedding",
+  storageBucket: "shreya-prakhar-wedding.firebasestorage.app",
+  messagingSenderId: "852876201723",
+  appId: "1:852876201723:web:012aa3f3280ac1fff4aa5e",
+  measurementId: "G-78MQRJ1ZNS"
+};
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Expose postBlessing function globally so HTML form can access it
+  window.postBlessing = async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('guestName').value;
+    const message = document.getElementById('guestMessage').value;
+    const words = message.trim().split(/\s+/).length;
+
+    if(words > 50) {
+      alert("Please keep your message under 50 words.");
+      return;
+    }
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.textContent = "Posting...";
+    submitBtn.disabled = true;
+
+    try {
+      // Save to Firebase Firestore Database
+      await addDoc(collection(db, "blessings"), {
+        name: name,
+        message: message,
+        timestamp: new Date()
+      });
+
+      document.getElementById('blessingForm').reset();
+      document.getElementById('charCount').textContent = "0/50 words";
+      alert("Thank you for your lovely blessing! ❤️");
+    } catch (error) {
+      console.error("Error adding blessing: ", error);
+      alert("Failed to post blessing. Check console for details.");
+    } finally {
+      submitBtn.textContent = "Post Blessing ✨";
+      submitBtn.disabled = false;
+    }
+  };
+
+  // Real-time listener to fetch blessings from Firebase
+  const q = query(collection(db, "blessings"), orderBy("timestamp", "desc"));
+  onSnapshot(q, (snapshot) => {
+    const grid = document.getElementById('blessingsGrid');
+    grid.innerHTML = ""; // Clear existing cards
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const dateStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now';
+      
+      const card = document.createElement('div');
+      card.className = 'blessing-card';
+      card.innerHTML = `
+        <h4>${escapeHtml(data.name)}</h4>
+        <p>${escapeHtml(data.message)}</p>
+        <span>${dateStr}</span>
+      `;
+      grid.appendChild(card);
+    });
+  });
+</script>
+
 <script>
 // Initialize AOS animations
 AOS.init({duration: 1000, once: true});
@@ -483,7 +565,7 @@ function createSparkle() {
 }
 setInterval(createSparkle, 250);
 
-// Background Music Toggle Logic
+// Background Music Control Logic
 let isPlaying = false;
 function toggleMusic() {
   const music = document.getElementById('bgMusic');
@@ -519,8 +601,8 @@ setInterval(countdown, 1000);
 
 // Sliding Puzzle Logic (Using local pic1.jpeg and pic2.jpeg)
 const images = [
-  "pic1.jpg",
-  "pic2.jpg"
+  "pic1.jpeg",
+  "pic2.jpeg"
 ];
 let currentImgIdx = 0;
 let boardState = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -535,7 +617,6 @@ function switchPuzzle(idx) {
 }
 
 function shufflePuzzle() {
-  // Randomize tiles while ensuring puzzle is playable
   for (let i = boardState.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [boardState[i], boardState[j]] = [boardState[j], boardState[i]];
@@ -584,39 +665,13 @@ function checkWin() {
 }
 shufflePuzzle();
 
-// Word Counter & Blessings Wall Post Handler
+// Word Counter for Blessings Wall
 function updateCount() {
   const text = document.getElementById('guestMessage').value.trim();
   const words = text ? text.split(/\s+/).length : 0;
   const countEl = document.getElementById('charCount');
   countEl.textContent = `${words}/50 words`;
   countEl.style.color = words > 50 ? "#e74c3c" : "#927568";
-}
-
-function postBlessing(e) {
-  e.preventDefault();
-  const name = document.getElementById('guestName').value;
-  const message = document.getElementById('guestMessage').value;
-  const words = message.trim().split(/\s+/).length;
-
-  if(words > 50) {
-    alert("Please keep your message under 50 words.");
-    return;
-  }
-
-  const grid = document.getElementById('blessingsGrid');
-  const card = document.createElement('div');
-  card.className = 'blessing-card';
-  card.innerHTML = `
-    <h4>${escapeHtml(name)}</h4>
-    <p>${escapeHtml(message)}</p>
-    <span>Just now</span>
-  `;
-  grid.prepend(card);
-
-  document.getElementById('blessingForm').reset();
-  document.getElementById('charCount').textContent = "0/50 words";
-  alert("Thank you for your lovely blessing! ❤️");
 }
 
 function escapeHtml(text) {
