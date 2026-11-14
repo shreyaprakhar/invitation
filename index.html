@@ -902,66 +902,6 @@ function showToast(msg) {
   }, 3500);
 }
 
-// Background Music Logic
-const music = document.getElementById('bgMusic');
-
-let isPlaying = false;
-
-function updateMusicButton() {
-  const text = document.getElementById('musicText');
-  const icon = document.getElementById('musicIcon');
-  const visualizer = document.getElementById('audioVisualizer');
-
-  if (isPlaying) {
-    text.textContent = "Pause Music";
-    icon.classList.add('hidden');
-    visualizer.classList.remove('hidden');
-    visualizer.classList.add('flex');
-  } else {
-    text.textContent = "Play Music";
-    icon.classList.remove('hidden');
-    visualizer.classList.add('hidden');
-    visualizer.classList.remove('flex');
-  }
-}
-
-function toggleMusic() {
-  if (music.paused) {
-    music.play().then(() => {
-      isPlaying = true;
-      updateMusicButton();
-    }).catch(() => {
-      showToast("Please tap Play Music to start!");
-    });
-  } else {
-    music.pause();
-    isPlaying = false;
-    updateMusicButton();
-  }
-}
-
-// Automatically try playing music when website opens
-window.addEventListener('load', function() {
-  music.play().then(() => {
-    isPlaying = true;
-    updateMusicButton();
-  }).catch(() => {
-    isPlaying = false;
-    updateMusicButton();
-    showToast("Tap Play Music to enjoy the wedding melody ❤️");
-  });
-});
-
-// Keep button synced with actual audio state
-music.addEventListener('play', () => {
-  isPlaying = true;
-  updateMusicButton();
-});
-
-music.addEventListener('pause', () => {
-  isPlaying = false;
-  updateMusicButton();
-});
 </script>
 
 </body>
