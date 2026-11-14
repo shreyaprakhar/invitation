@@ -202,6 +202,7 @@
 </audio>
 
 <!-- Floating Audio Toggle Button -->
+  <!--
 <button id="musicToggle" onclick="toggleMusic()" class="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-burgundy-800 to-burgundy-900 text-gold-light border border-gold/70 px-5 py-3 rounded-full cursor-pointer shadow-2xl flex items-center gap-3 transition-all duration-300 hover:scale-105 hover:border-gold-light">
   <span id="audioVisualizer" class="hidden flex items-center gap-1">
     <span class="audio-bar"></span>
@@ -211,7 +212,19 @@
   <span id="musicIcon">🎵</span>
   <span id="musicText" class="text-xs font-medium tracking-wide">Play Music</span>
 </button>
+-->
+  <button id="musicToggle" onclick="toggleMusic()"
+  class="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-burgundy-800 to-burgundy-900 text-gold-light border border-gold/70 px-5 py-3 rounded-full cursor-pointer shadow-2xl flex items-center gap-3 transition-all duration-300 hover:scale-105 hover:border-gold-light">
 
+  <span id="audioVisualizer" class="hidden items-center gap-1">
+    <span class="audio-bar"></span>
+    <span class="audio-bar"></span>
+    <span class="audio-bar"></span>
+  </span>
+
+  <span id="musicIcon">🎵</span>
+  <span id="musicText" class="text-xs font-medium tracking-wide">Play Music</span>
+</button>
 <!-- Navigation Header -->
 <nav class="fixed top-0 left-0 w-full z-40 bg-burgundy-900/85 backdrop-blur-md border-b border-gold/30 px-6 py-3.5 transition-all duration-300 shadow-md">
   <div class="max-w-6xl mx-auto flex justify-between items-center">
@@ -627,7 +640,8 @@ function createPetal() {
 setInterval(createPetal, 700);
 
 // Audio Toggle Logic
-let isPlaying = false;
+
+  let isPlaying = false;
 function toggleMusic() {
   const music = document.getElementById('bgMusic');
   const text = document.getElementById('musicText');
@@ -888,7 +902,66 @@ function showToast(msg) {
   }, 3500);
 }
 
+// Background Music Logic
+const music = document.getElementById('bgMusic');
 
+let isPlaying = false;
+
+function updateMusicButton() {
+  const text = document.getElementById('musicText');
+  const icon = document.getElementById('musicIcon');
+  const visualizer = document.getElementById('audioVisualizer');
+
+  if (isPlaying) {
+    text.textContent = "Pause Music";
+    icon.classList.add('hidden');
+    visualizer.classList.remove('hidden');
+    visualizer.classList.add('flex');
+  } else {
+    text.textContent = "Play Music";
+    icon.classList.remove('hidden');
+    visualizer.classList.add('hidden');
+    visualizer.classList.remove('flex');
+  }
+}
+
+function toggleMusic() {
+  if (music.paused) {
+    music.play().then(() => {
+      isPlaying = true;
+      updateMusicButton();
+    }).catch(() => {
+      showToast("Please tap Play Music to start!");
+    });
+  } else {
+    music.pause();
+    isPlaying = false;
+    updateMusicButton();
+  }
+}
+
+// Automatically try playing music when website opens
+window.addEventListener('load', function() {
+  music.play().then(() => {
+    isPlaying = true;
+    updateMusicButton();
+  }).catch(() => {
+    isPlaying = false;
+    updateMusicButton();
+    showToast("Tap Play Music to enjoy the wedding melody ❤️");
+  });
+});
+
+// Keep button synced with actual audio state
+music.addEventListener('play', () => {
+  isPlaying = true;
+  updateMusicButton();
+});
+
+music.addEventListener('pause', () => {
+  isPlaying = false;
+  updateMusicButton();
+});
 </script>
 
 </body>
